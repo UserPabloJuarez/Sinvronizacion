@@ -1,0 +1,72 @@
+
+CREATE PROCEDURE [dbo].[LogErrorSincroClientesMySQL]
+	@ErrorLogId int = 0 OUTPUT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	--
+	SET @ErrorLogId = 0;
+	
+	BEGIN TRY
+	
+		IF ERROR_NUMBER() IS NULL
+			RETURN;
+			
+		IF XACT_STATE() = -1
+		BEGIN
+			PRINT 'Cannot log error since the current transaction is in an uncommittable state. '
+			+ 'Rollback the transaction before executing LogErrorSincroClientesMySQL in order to successfully log error information.'
+			RETURN;
+		END
+		
+		INSERT [dbo].[SincroClientesMySQLErrorLog]
+		(
+			[UserName],
+			[ErrorNumber],
+			[ErrorSeverity],
+			[ErrorState],
+			[ErrorProcedure],
+			[ErrorLine],
+			[ErrorMessage]
+		)
+		VALUES
+		(
+			CONVERT(sysname, CURRENT_USER),
+			ERROR_NUMBER(),
+			ERROR_SEVERITY(),
+			ERROR_STATE(),
+			ERROR_PROCEDURE(),
+			ERROR_LINE(),
+			ERROR_MESSAGE()
+		);
+		
+		SET @ErrorLogId = @@IDENTITY;
+
+		
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occurred in store procedure LogErrorSincroClientesMySQL: ';
+		EXECUTE [dbo].[PrintErrorSincroClientesMySQL];
+		RETURN -1;
+	END CATCH
+
+	--Devolvemos el parametro de salida
+	--set @rc=0
+	
+	PRINT N'---------------------------------------';
+	
+	BEGIN TRY
+	BEGIN
+		--Llamamos al procedimiento
+		exec dbo.Correo_Envia_SincroClientesMySQL
+	END
+
+	END TRY
+	BEGIN CATCH
+		PRINT 'An error occurred in store procedure LogErrorSincroClientesMySQL: ';
+		PRINT N'Error Message: ' + ERROR_MESSAGE();
+	END CATCH
+	END
+GO
+
+

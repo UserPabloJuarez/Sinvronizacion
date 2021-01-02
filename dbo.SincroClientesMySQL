@@ -1,0 +1,1164 @@
+CREATE Procedure [dbo].[SincroClientesMySQL]
+as
+--20130423 JGomez 
+--Antiguo procedimiento de sincronizacion de clientes
+--Se deja solo la insercion de los clientes nuevos desde web o cambio razon social de cableros
+--La modificacion de los clientes se hace desde Xena
+select * 
+into #clientes
+from openquery(xprv,'select * from pv_clientes') as xprv
+
+
+insert into clitipo
+select cast(tmp.id_cliente as char(12))
+	,cast(tmp.id_cliente_fact as char(12)),
+	'000'
+from #clientes tmp
+	left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) = convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+	and tmp.id_empresa COLLATE DATABASE_DEFAULT = c.id_empresa COLLATE DATABASE_DEFAULT
+where c.id_cliente_fact not in (select numero from clitipo where tipo='000')
+			and c.id_cliente is null
+
+--Importamos clientes en general M1
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'A' --alta sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+
+	where c.id_cliente is null
+	and tmp.id_cliente not like 'M6%'
+	and tmp.id_cliente not like 'M7%'
+	and tmp.id_cliente_fact not like '2%' 
+	
+	
+	--Importamos clientes cableros hijos
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'N' --No sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+	where c.id_cliente is null
+	and tmp.id_cliente_fact like '2%' 
+	and tmp.id_cliente<>tmp.id_cliente_fact
+	
+	--Importamos cableros padres, esto tiene que ser vacio
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'A' --No sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+	where c.id_cliente is null
+	and tmp.id_cliente_fact like '2%' 
+	and tmp.id_cliente=tmp.id_cliente_fact
+GO
+
+
+***********************************************************************************************************************************
+
+USE [nfac]
+GO
+
+/****** Object:  StoredProcedure [dbo].[SincroClientesMySQL]    Script Date: 21/11/2020 18:49:26 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER Procedure [dbo].[SincroClientesMySQL]
+as
+--20130423 JGomez 
+--Antiguo procedimiento de sincronizacion de clientes
+--Se deja solo la insercion de los clientes nuevos desde web o cambio razon social de cableros
+--La modificacion de los clientes se hace desde Xena
+select * 
+into #clientes
+from openquery(xprv,'select * from pv_clientes') as xprv
+
+
+insert into clitipo
+select cast(tmp.id_cliente as char(12))
+	,cast(tmp.id_cliente_fact as char(12)),
+	'000'
+from #clientes tmp
+	left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) = convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+	and tmp.id_empresa COLLATE DATABASE_DEFAULT = c.id_empresa COLLATE DATABASE_DEFAULT
+where c.id_cliente_fact not in (select numero from clitipo where tipo='000')
+			and c.id_cliente is null
+
+--Importamos clientes en general M1
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'A' --alta sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+
+	where c.id_cliente is null
+	and tmp.id_cliente not like 'M6%'
+	and tmp.id_cliente not like 'M7%'
+	and tmp.id_cliente_fact not like '2%' 
+	
+	
+	--Importamos clientes cableros hijos
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'N' --No sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+	where c.id_cliente is null
+	and tmp.id_cliente_fact like '2%' 
+	and tmp.id_cliente<>tmp.id_cliente_fact
+	
+	--Importamos cableros padres, esto tiene que ser vacio
+	insert into pv_clientes
+	(	id_cliente
+		,id_cliente_fact 
+		,id_empresa 
+		,flag_cliente 
+		,flag_subclientes 
+		,digito_control 
+		,flag_proveedor 
+		,Id_Plataforma 
+		,fecha_alta 
+		,id_estado_cliente 
+		,fecha_id_estado 
+		,Id_scoring 
+		,fecha_scoring 
+		,id_grupo_cliente 
+		,Id_agente 
+		,Id_gestora 
+		,Id_categoria 
+		,nombre 
+		,razon_social 
+		,emp_iae 
+		,emp_actividad 
+		,emp_anno_creacion 
+		,emp_web 
+		,nif 
+		,direccion 
+		,postal 
+		,poblacion 
+		,provincia 
+		,pais 
+		,contacto 
+		,telefono 
+		,telefono_ext 
+		,movil 
+		,fax 
+		,fax_ext 
+		,email 
+		,id_idioma 
+		,fact_id_periodo 
+		,fact_id_agrupa 
+		,forma_pago 
+		,prepago 
+		,prepago_ingresos 
+		,flag_quien_paga 
+		,banco_titular 
+		,banco_nombre 
+		,banco_direccion 
+		,banco_poblacion
+		,banco_entidad 
+		,banco_agencia 
+		,banco_control 
+		,banco_cuenta 
+		,tarjeta_titular 
+		,tarjeta_tipo 
+		,tarjeta_numero 
+		,tarjeta_vencimiento 
+		,fact_mail 
+		,flag_datos_envio 
+		,env_nombre 
+		,env_nif 
+		,env_direccion 
+		,env_postal 
+		,env_poblacion 
+		,env_provincia 
+		,env_pais 
+		,env_telefono 
+		,env_telefono_ext 
+		,env_movil 
+		,env_fax 
+		,env_fax_ext 
+		,env_email 
+		,iva 
+		,Recargo 
+		,acuenta 
+		,flag_observaciones 
+		,observaciones 
+		,DV_flag_tipo_acceso 
+		,DV_id_tarifa 
+		,DV_srch_partition 
+		,dv_lock_partition 
+		,DT_id_tarifa 
+		,id_vendedor 
+		,password 
+		,Id_Tipo_Cliente
+		,Dia_Pago
+		,Id_Sincro_Sap
+	)
+	select cast(tmp.id_cliente as char(12))
+		,cast(tmp.id_cliente_fact as char(12))
+		,cast(tmp.id_empresa as char(12))
+		,cast(tmp.flag_cliente as char(1))
+		,cast(tmp.flag_subclientes as char(1))
+		,cast(tmp.digito_control as char(1)) 
+		,cast(tmp.flag_proveedor as char(12)) 
+		,cast(tmp.Id_Plataforma as char(10)) 
+		,cast(tmp.fecha_alta as char(8)) 
+		,cast(tmp.id_estado_cliente as char(3)) 
+		,cast(tmp.fecha_id_estado as char(10)) 
+		,cast(tmp.Id_scoring as char(2)) 
+		,cast(tmp.fecha_scoring as char(8)) 
+		,cast(tmp.id_grupo_cliente as char(4)) 
+		,cast(tmp.Id_agente as char(15)) 
+		,cast(tmp.Id_gestora as char(25)) 
+		,cast(tmp.Id_categoria as char(1)) 
+		,cast(tmp.nombre as char(100))
+		,cast(tmp.razon_social as char(100)) 
+		,cast(tmp.emp_iae as char(15)) 
+		,cast(tmp.emp_actividad as char(50)) 
+		,cast(tmp.emp_anno_creacion as char(4)) 
+		,cast(tmp.emp_web as char(80)) 
+		,cast(tmp.nif as char(15))
+		,cast(tmp.direccion as char(100)) 
+		,cast(tmp.postal as char(10)) 
+		,cast(tmp.poblacion as char(100)) 
+		,cast(tmp.provincia as char(30)) 
+		,cast(tmp.pais as char(50)) 
+		,cast(tmp.contacto as char(100)) 
+		,cast(tmp.telefono as char(25)) 
+		,cast(tmp.telefono_ext as char(5)) 
+		,cast(tmp.movil as char(15)) 
+		,cast(tmp.fax as char(25)) 
+		,cast(tmp.fax_ext as char(5)) 
+		,cast(tmp.email as char(100)) 
+		,cast(tmp.id_idioma as char(3)) 
+		,cast(tmp.fact_id_periodo as char(1)) 
+		,cast(tmp.fact_id_agrupa as char(1)) 
+		,cast(tmp.forma_pago as char(30))
+		,cast(tmp.prepago as char(1))
+		,cast(tmp.prepago_ingresos as char(10))
+		,cast(tmp.flag_quien_paga as char(1)) 
+		,cast(tmp.banco_titular as char(100))
+		,cast(tmp.banco_nombre as char(100)) 
+		,cast(tmp.banco_direccion as char(100)) 
+		,cast(tmp.banco_poblacion as char(100))
+		,cast(tmp.banco_entidad as char(4))
+		,cast(tmp.banco_agencia as char(4))
+		,cast(tmp.banco_control as char(2))
+		,cast(tmp.banco_cuenta as char(10))
+		,cast(tmp.tarjeta_titular as char(100))
+		,cast(tmp.tarjeta_tipo as char(2))
+		,cast(tmp.tarjeta_numero as char(16)) 
+		,cast(tmp.tarjeta_vencimiento as char(7)) 
+		,cast(tmp.fact_mail as char(100))
+		,cast(tmp.flag_datos_envio as char(10))
+		,cast(tmp.env_nombre as char(100)) 
+		,cast(tmp.env_nif as char(15)) 
+		,cast(tmp.env_direccion as char(100)) 
+		,cast(tmp.env_postal as char(10))
+		,cast(tmp.env_poblacion as char(100))
+		,cast(tmp.env_provincia as char(30))
+		,cast(tmp.env_pais as char(50)) 
+		,cast(tmp.env_telefono as char(30))
+		,cast(tmp.env_telefono_ext as char(5)) 
+		,cast(tmp.env_movil as char(15)) 
+		,cast(tmp.env_fax as char(25)) 
+		,cast(tmp.env_fax_ext as char(5))
+		,cast(tmp.env_email as char(100))
+		,cast(tmp.iva as int)
+		,cast(tmp.Recargo as int)
+		,cast(tmp.acuenta as decimal(10,2))
+		,cast(tmp.flag_observaciones as char(1))
+		,cast(tmp.observaciones as char(255))
+		,cast(tmp.DV_flag_tipo_acceso as char(1)) 
+		,cast(tmp.DV_id_tarifa as char(20))
+		,cast(tmp.DV_srch_partition as char(4))
+		,cast(tmp.dv_lock_partition as char(4))
+		,cast(tmp.DT_id_tarifa as char(20)) 
+		,cast(tmp.id_vendedor as char(30)) 
+		,cast(tmp.password as char(25)) 
+		,cast(tmp.Id_Tipo_Cliente as char(1)) 
+		,cast(tmp.Dia_Pago as int) 
+		,'A' --No sincro sap
+	from #clientes tmp
+		left join pv_clientes c with (nolock)
+		on convert(varchar,rtrim(ltrim(tmp.id_cliente))) 
+			=convert(varchar,rtrim(ltrim(c.id_cliente))) COLLATE Modern_Spanish_CI_AS
+		and tmp.id_empresa COLLATE DATABASE_DEFAULT
+			=c.id_empresa COLLATE DATABASE_DEFAULT
+	where c.id_cliente is null
+	and tmp.id_cliente_fact like '2%' 
+	and tmp.id_cliente=tmp.id_cliente_fact
+GO
+
+
